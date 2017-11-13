@@ -29,31 +29,31 @@ func DefColor() ColorType {
 func SetDefaultColor(color ColorType) {
 	defcolor = color
 }
-func Color(color ColorType, des string) string {
-	return fmt.Sprintf("%s%s%s", color, des, DefColor())
+func Color(color ColorType, tag string) string {
+	return fmt.Sprintf("%s%s%s", color, tag, DefColor())
 }
 
-func Info(format string, a ...interface{}) {
-	format = Color(Blue, "[INFO]: ") + format
-	log.Printf(format, a...)
+func Info(info string, a ...interface{}) {
+	info = Color(Blue, "[INFO]: ") + info
+	log.Printf(info, a...)
 }
 
-func Trace(format string, a ...interface{}) {
-	format = Color(White, "[TRACE]: ") + format
-	log.Printf(format, a...)
+func Trace(info string, a ...interface{}) {
+	info = Color(White, "[TRACE]: ") + info
+	log.Printf(info, a...)
 }
 
-func Error(format string, a ...interface{}) {
-	format = Color(Red, "[ERROR]: ") + format
-	log.Fatalf(format, a...)
+func Error(info string, a ...interface{}) {
+	info = Color(Red, "[ERROR]: ") + info
+	log.Fatalf(info, a...)
 }
 
-func Warning(format string, a ...interface{}) {
-	format = Color(Magenta, "[WARN]: ") + format
-	log.Fatalf(format, a...)
+func Warning(info string, a ...interface{}) {
+	info = Color(Magenta, "[WARN]: ") + info
+	log.Fatalf(info, a...)
 }
 
-func Success(format string, a ...interface{}) {
-	format = Color(Green, "[SUCC]: ") + format
-	log.Fatalf(format, a...)
+func Success(info string, a ...interface{}) {
+	info = Color(Green, "[SUCC]: ") + info
+	log.Fatalf(info, a...)
 }
