@@ -20,6 +20,22 @@ const (
 	DefaultColor ColorType = "\x1b[39m"
 )
 
+const (
+	LevelInfoMsg    = "INFO"
+	LevelTraceMsg   = "TRACE"
+	LevelErrorMsg   = "ERROR"
+	LevelWarnMsg    = "WARN"
+	LevelSuccessMsg = "SUCC"
+)
+
+const (
+	LevelInfo    LevelType = iota
+	LevelTrace
+	LevelError
+	LevelWarn
+	LevelSuccess
+)
+
 var defcolor ColorType = DefaultColor
 
 func DefColor() ColorType {

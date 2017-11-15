@@ -1,0 +1,12 @@
+package: .
+import:
+- package: encoding/json
+- package: errors
+- package: fmt
+- package: log
+- package: net/http
+- package: os
+- package: path/filepath
+- package: runtime/debug
+- package: sync
+- package: time
