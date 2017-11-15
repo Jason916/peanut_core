@@ -56,7 +56,7 @@ type WriterFile struct {
 	fileUrl        string
 	curFileUrl     string
 	rotate         bool
-	rotateFileDate time.Time
+	rotateFileDateTime time.Time
 }
 
 type WriterConfig struct {
@@ -66,7 +66,7 @@ type WriterConfig struct {
 	dateTimeFormat string
 }
 
-func NewLogWriterConfig() *WriterConfig {
+func NewFileWriterConfig() *WriterConfig {
 	return &WriterConfig{
 		saveInterval:   defaultSaveInterval,
 		cacheSize:      defaultCacheSize,
@@ -151,8 +151,8 @@ func (w *WriterFile) writeFile() error {
 			if !ok {
 				return errors.New("WriterFile log chan is closed")
 			}
-			if w.rotate && logEntity.time.After(w.rotateFileDate) {
-				w.refreshRotateDate(logEntity.time)
+			if w.rotate && logEntity.time.After(w.rotateFileDateTime) {
+				w.updateRotateDateTime(logEntity.time)
 				file, err = os.OpenFile(w.curFileUrl, os.O_APPEND|os.O_CREATE, 0666)
 				if err != nil {
 					return err
@@ -168,14 +168,14 @@ func (w *WriterFile) writeFile() error {
 	return err
 }
 
-func (w *WriterFile) refreshRotateDate(t time.Time) {
+func (w *WriterFile) updateRotateDateTime(t time.Time) {
 	if w.rotate {
-		w.rotateFileDate = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location()).Add(time.Hour*24 - 1)
-		w.refreshRotateFile(t)
+		w.rotateFileDateTime = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location()).Add(time.Hour*24 - 1)
+		w.updateRotateFile(t)
 	}
 }
 
-func (w *WriterFile) refreshRotateFile(t time.Time) {
+func (w *WriterFile) updateRotateFile(t time.Time) {
 	if w.rotate {
 		w.curFileUrl = w.fileUrl + "_" + w.getDate(t) + ".log"
 	}
@@ -190,7 +190,7 @@ func pathExists(path string) bool {
 
 func (w *WriterFile) SetDateFormat(dateFormat string) {
 	w.WriterConfig.SetDateFormat(dateFormat)
-	w.refreshRotateFile(w.rotateFileDate)
+	w.updateRotateFile(w.rotateFileDateTime)
 }
 
 func NewLogWriterFile(level LevelType, path string, fileName string, rotate bool, config *WriterConfig) (*WriterFile, error) {
@@ -198,7 +198,7 @@ func NewLogWriterFile(level LevelType, path string, fileName string, rotate bool
 		return nil, fmt.Errorf("path not exists: %s", path)
 	}
 	if config == nil {
-		config = NewLogWriterConfig()
+		config = NewFileWriterConfig()
 	}
 	fileUrl := filepath.Join(path, fileName)
 	writer := &WriterFile{
@@ -210,7 +210,7 @@ func NewLogWriterFile(level LevelType, path string, fileName string, rotate bool
 		curFileUrl:   fileUrl + ".log",
 		rotate:       rotate,
 	}
-	writer.refreshRotateDate(time.Now())
+	writer.updateRotateDateTime(time.Now())
 	go writer.serve()
 	return writer, nil
 }
