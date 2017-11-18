@@ -2,6 +2,7 @@
 common log core for Golang
 
 LEVEL
+=
 --5 levels: info trace error warning success
 
 ERROR
