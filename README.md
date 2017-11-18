@@ -1,26 +1,26 @@
 # peanut_core
 common log core for Golang
 
-LEVEL
+level
 =
 * 5 levels: info trace error warning success
 
-ERROR
+error
 =
 * logging when an error occurs and make it colored
 
-COLOR
+color
 =
 * support 'set default color' function
 * make msg colored
 
-WRITE FILE
+write file
 =
 * by time
 * by size(default 1024)
 * write file at regular intervals
 * support rotate
 
-CONFIG
+config
 =
 * get config from file
