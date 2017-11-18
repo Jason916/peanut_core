@@ -3,6 +3,9 @@ import:
 - package: encoding/json
 - package: errors
 - package: fmt
+- package: github.com/Jason916/peanut_core
+  subpackages:
+  - log
 - package: log
 - package: net/http
 - package: os
@@ -10,3 +13,5 @@ import:
 - package: runtime/debug
 - package: sync
 - package: time
+testImport:
+- package: testing

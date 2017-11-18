@@ -2,7 +2,7 @@
 package handler
 
 import (
-	"../log"
+	"../vendor/github.com/Jason916/peanut_core/log"
 	"net/http"
 	"runtime/debug"
 )
