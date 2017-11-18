@@ -1,0 +1,3 @@
+[INFO ] [2017-11-18 16:18:01]:-> test info 
+[ERROR] [2017-11-18 16:18:01]:-> test write error
+[TRACE] [2017-11-18 16:18:01]:-> test write trace

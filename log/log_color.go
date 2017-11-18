@@ -20,22 +20,6 @@ const (
 	DefaultColor ColorType = "\x1b[39m"
 )
 
-const (
-	LevelInfoMsg    = "INFO"
-	LevelTraceMsg   = "TRACE"
-	LevelErrorMsg   = "ERROR"
-	LevelWarnMsg    = "WARN"
-	LevelSuccessMsg = "SUCC"
-)
-
-const (
-	LevelInfo    LevelType = iota
-	LevelTrace
-	LevelError
-	LevelWarn
-	LevelSuccess
-)
-
 var defcolor ColorType = DefaultColor
 
 func DefColor() ColorType {
@@ -49,27 +33,27 @@ func Color(color ColorType, tag string) string {
 	return fmt.Sprintf("%s%s%s", color, tag, DefColor())
 }
 
-func Info(info string, a ...interface{}) {
+func Info(info string, args ...interface{}) {
 	info = Color(Blue, "[INFO]: ") + info
-	log.Printf(info, a...)
+	log.Printf(info, args...)
 }
 
-func Trace(info string, a ...interface{}) {
+func Trace(info string, args ...interface{}) {
 	info = Color(White, "[TRACE]: ") + info
-	log.Printf(info, a...)
+	log.Printf(info, args...)
 }
 
-func Error(info string, a ...interface{}) {
+func Error(info string, args ...interface{}) {
 	info = Color(Red, "[ERROR]: ") + info
-	log.Fatalf(info, a...)
+	log.Fatalf(info, args...)
 }
 
-func Warning(info string, a ...interface{}) {
+func Warning(info string, args ...interface{}) {
 	info = Color(Magenta, "[WARN]: ") + info
-	log.Fatalf(info, a...)
+	log.Fatalf(info, args...)
 }
 
-func Success(info string, a ...interface{}) {
+func Success(info string, args ...interface{}) {
 	info = Color(Green, "[SUCC]: ") + info
-	log.Fatalf(info, a...)
+	log.Fatalf(info, args...)
 }

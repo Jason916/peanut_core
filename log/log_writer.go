@@ -11,18 +11,76 @@ import (
 )
 
 const (
-	defaultCacheSize           = 1024
-	defaultSaveInterval        = time.Second * 1
-	defaultLogFormatPrefixFile = "[%-5s] [%s] : %s -> %s \n"
-	defaultDateFormat          = "2010-01-01"
-	defaultDateTimeFormat      = "2010-01-01 12:00:00.000"
+	defaultLogFormatWithPrefix = "[%-5s] [%s]:-> %s\n"
 )
+
+const (
+	LevelInfoMsg              = "INFO"
+	LevelTraceMsg             = "TRACE"
+	LevelErrorMsg             = "ERROR"
+	LevelWarnMsg              = "WARN"
+	LevelSuccessMsg           = "SUCC"
+	LevelInfo       LevelType = iota
+	LevelTrace
+	LevelError
+	LevelWarn
+	LevelSuccess
+)
+
+type LevelType uint8
+
+type PLogger struct {
+	writer PLogWriter
+}
+
+type PLogWriter interface {
+	Write(*logEntity) error
+	Close() error
+}
+
+type logEntity struct {
+	msg   string
+	time  time.Time
+	level LevelType
+}
+
+type WriterFile struct {
+	*WriterConfig
+	logChan            chan *logEntity
+	tickChan           *time.Ticker
+	logFileUrl         string
+	logCurFileUrl      string
+	rotate             bool
+	rotateFileDateTime time.Time
+}
+
+type WriterConfig struct {
+	saveInterval   time.Duration
+	cacheSize      uint32
+	dateFormat     string
+	dateTimeFormat string
+}
 
 var (
 	pool *sync.Pool
 )
 
-type LevelType uint8
+func init() {
+	pool = &sync.Pool{
+		New: func() interface{} {
+			return &logEntity{}
+		},
+	}
+}
+
+func NewPLogWriterConfig() *WriterConfig {
+	return &WriterConfig{
+		saveInterval:   time.Second,
+		cacheSize:      1024,
+		dateFormat:     "2006-01-02",
+		dateTimeFormat: "2006-01-02 15:04:05",
+	}
+}
 
 func getLevelTag(level LevelType) string {
 	switch level {
@@ -38,40 +96,6 @@ func getLevelTag(level LevelType) string {
 		return LevelSuccessMsg
 	default:
 		return ""
-	}
-}
-
-type logEntity struct {
-	msg    string
-	time   time.Time
-	level  LevelType
-	caller string
-}
-
-type WriterFile struct {
-	*WriterConfig
-	logChan        chan *logEntity
-	tickChan       *time.Ticker
-	level          LevelType
-	fileUrl        string
-	curFileUrl     string
-	rotate         bool
-	rotateFileDateTime time.Time
-}
-
-type WriterConfig struct {
-	cacheSize      uint32
-	saveInterval   time.Duration
-	dateFormat     string
-	dateTimeFormat string
-}
-
-func NewFileWriterConfig() *WriterConfig {
-	return &WriterConfig{
-		saveInterval:   defaultSaveInterval,
-		cacheSize:      defaultCacheSize,
-		dateFormat:     defaultDateFormat,
-		dateTimeFormat: defaultDateTimeFormat,
 	}
 }
 
@@ -91,21 +115,7 @@ func (config *WriterConfig) SetDateTimeFormat(dateTimeFormat string) {
 	config.dateTimeFormat = dateTimeFormat
 }
 
-func (w *WriterFile) serve() {
-	for {
-		select {
-		case <-w.tickChan.C:
-			if err := w.writeFile(); err != nil {
-				fmt.Println("Writer log file failed", err)
-			}
-		}
-	}
-}
-
 func (w *WriterFile) Write(logEntity *logEntity) error {
-	if logEntity.level < w.level {
-		return nil
-	}
 	select {
 	case w.logChan <- logEntity:
 		return nil
@@ -114,16 +124,15 @@ func (w *WriterFile) Write(logEntity *logEntity) error {
 		w.Write(logEntity)
 		return errors.New("WriterFile log chan is overflow")
 	}
-
 }
 
 func (w *WriterFile) Close() error {
 	w.tickChan.Stop()
 	err := w.writeFile()
-	close(w.logChan)
 	if err != nil {
 		fmt.Println("Writer log file failed", err)
 	}
+	close(w.logChan)
 	return err
 }
 
@@ -139,7 +148,7 @@ func (w *WriterFile) writeFile() error {
 	if len(w.logChan) == 0 {
 		return nil
 	}
-	file, err := os.OpenFile(w.curFileUrl, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	file, err := os.OpenFile(w.logCurFileUrl, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		return err
 	}
@@ -153,12 +162,12 @@ func (w *WriterFile) writeFile() error {
 			}
 			if w.rotate && logEntity.time.After(w.rotateFileDateTime) {
 				w.updateRotateDateTime(logEntity.time)
-				file, err = os.OpenFile(w.curFileUrl, os.O_APPEND|os.O_CREATE, 0666)
+				file, err = os.OpenFile(w.logCurFileUrl, os.O_APPEND|os.O_CREATE, 0666)
 				if err != nil {
 					return err
 				}
 			}
-			fMsg := fmt.Sprintf(defaultLogFormatPrefixFile, getLevelTag(logEntity.level), w.getDateTime(logEntity.time), logEntity.caller, logEntity.msg)
+			fMsg := fmt.Sprintf(defaultLogFormatWithPrefix, getLevelTag(logEntity.level), w.getDateTime(logEntity.time), logEntity.msg)
 			_, err = file.WriteString(fMsg)
 			pool.Put(logEntity)
 		default:
@@ -177,40 +186,99 @@ func (w *WriterFile) updateRotateDateTime(t time.Time) {
 
 func (w *WriterFile) updateRotateFile(t time.Time) {
 	if w.rotate {
-		w.curFileUrl = w.fileUrl + "_" + w.getDate(t) + ".log"
+		w.logCurFileUrl = w.logFileUrl + "_" + w.getDate(t) + ".log"
 	}
 }
 
-func pathExists(path string) bool {
+func logPathExists(path string) bool {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return false
 	}
 	return true
 }
 
-func (w *WriterFile) SetDateFormat(dateFormat string) {
+func (w *WriterFile) SetFileDateFormat(dateFormat string) {
 	w.WriterConfig.SetDateFormat(dateFormat)
 	w.updateRotateFile(w.rotateFileDateTime)
 }
 
-func NewLogWriterFile(level LevelType, path string, fileName string, rotate bool, config *WriterConfig) (*WriterFile, error) {
-	if !pathExists(path) {
-		return nil, fmt.Errorf("path not exists: %s", path)
+func NewPLogWriter(path string, logFileName string, rotate bool, config *WriterConfig) (*WriterFile, error) {
+	if !logPathExists(path) {
+		return nil, fmt.Errorf("log path not exists: %s", path)
 	}
 	if config == nil {
-		config = NewFileWriterConfig()
+		config = NewPLogWriterConfig()
 	}
-	fileUrl := filepath.Join(path, fileName)
+	logFileUrl := filepath.Join(path, logFileName)
 	writer := &WriterFile{
-		WriterConfig: config,
-		logChan:      make(chan *logEntity, config.cacheSize),
-		tickChan:     time.NewTicker(config.saveInterval),
-		level:        level,
-		fileUrl:      fileUrl,
-		curFileUrl:   fileUrl + ".log",
-		rotate:       rotate,
+		WriterConfig:  config,
+		logChan:       make(chan *logEntity, config.cacheSize),
+		tickChan:      time.NewTicker(config.saveInterval),
+		logFileUrl:    logFileUrl,
+		logCurFileUrl: logFileUrl + ".log",
+		rotate:        rotate,
 	}
 	writer.updateRotateDateTime(time.Now())
 	go writer.serve()
 	return writer, nil
+}
+
+func (w *WriterFile) serve() {
+	for {
+		select {
+		case <-w.tickChan.C:
+			if err := w.writeFile(); err != nil {
+				fmt.Println("Writer log file failed", err)
+			}
+		}
+	}
+}
+
+func NewPLogger(plw PLogWriter) *PLogger {
+	plogger := &PLogger{
+		writer: plw,
+	}
+
+	return plogger
+}
+
+func (log *PLogger) writeInfo(level LevelType, info string, args ...interface{}) {
+	pInfo := fmt.Sprintf(info, args...)
+	curtime := time.Now()
+	if log.writer != nil {
+		entity := pool.Get().(*logEntity)
+		entity.msg = pInfo
+		entity.level = level
+		entity.time = curtime
+		if err := log.writer.Write(entity); err != nil {
+			fmt.Println("write info failed", err)
+		}
+	}
+}
+
+func (log *PLogger) PInfo(info string, args ...interface{}) {
+	log.writeInfo(LevelInfo, info, args...)
+}
+
+func (log *PLogger) PTrace(info string, args ...interface{}) {
+	log.writeInfo(LevelTrace, info, args...)
+}
+
+func (log *PLogger) PError(info string, args ...interface{}) {
+	log.writeInfo(LevelError, info, args...)
+}
+
+func (log *PLogger) PWarn(info string, args ...interface{}) {
+	log.writeInfo(LevelWarn, info, args...)
+}
+
+func (log *PLogger) PSucc(info string, args ...interface{}) {
+	log.writeInfo(LevelWarn, info, args...)
+}
+
+func (log *PLogger) PClose() error {
+	if log.writer != nil {
+		return log.writer.Close()
+	}
+	return nil
 }
