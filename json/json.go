@@ -7,7 +7,7 @@ import (
 )
 
 func Json(respwrite http.ResponseWriter, statuscode int, data interface{}){
-	respwrite.Header().Set("Content-Type", "text/json;charset=utf-8")
+	respwrite.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	respwrite.WriteHeader(statuscode)
 	body, err := json.Marshal(data)
 
