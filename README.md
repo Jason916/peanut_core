@@ -1,5 +1,5 @@
 # peanut_core
-common log core for Golang
+A common logging package for Golang
 
 level
 =
