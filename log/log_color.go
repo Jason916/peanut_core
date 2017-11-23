@@ -1,4 +1,4 @@
-//jasonxu 
+//jasonxu
 package log
 
 import (
@@ -30,30 +30,30 @@ func SetDefaultColor(color ColorType) {
 	defcolor = color
 }
 func Color(color ColorType, tag string) string {
-	return fmt.Sprintf("%s%s%s", color, tag, DefColor())
+	return fmt.Sprintf("%s[%-5s]: %s", color, tag, DefColor())
 }
 
 func Info(info string, args ...interface{}) {
-	info = Color(Blue, "[INFO]: ") + info
+	info = Color(Blue, getLevelTag(LevelInfo)) + info
 	log.Printf(info, args...)
 }
 
 func Trace(info string, args ...interface{}) {
-	info = Color(White, "[TRACE]: ") + info
+	info = Color(White, getLevelTag(LevelTrace)) + info
 	log.Printf(info, args...)
 }
 
 func Error(info string, args ...interface{}) {
-	info = Color(Red, "[ERROR]: ") + info
+	info = Color(Red, getLevelTag(LevelError)) + info
 	log.Fatalf(info, args...)
 }
 
 func Warning(info string, args ...interface{}) {
-	info = Color(Magenta, "[WARN]: ") + info
+	info = Color(Magenta, getLevelTag(LevelWarn)) + info
 	log.Printf(info, args...)
 }
 
 func Success(info string, args ...interface{}) {
-	info = Color(Green, "[SUCC]: ") + info
+	info = Color(Green, getLevelTag(LevelSuccess)) + info
 	log.Printf(info, args...)
 }
