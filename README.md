@@ -27,6 +27,7 @@ config
 
 Getting Started
 =
+```go
 package main
 
 import (
