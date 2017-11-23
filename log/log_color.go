@@ -50,10 +50,10 @@ func Error(info string, args ...interface{}) {
 
 func Warning(info string, args ...interface{}) {
 	info = Color(Magenta, "[WARN]: ") + info
-	log.Fatalf(info, args...)
+	log.Printf(info, args...)
 }
 
 func Success(info string, args ...interface{}) {
 	info = Color(Green, "[SUCC]: ") + info
-	log.Fatalf(info, args...)
+	log.Printf(info, args...)
 }
