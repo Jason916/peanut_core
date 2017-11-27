@@ -6,6 +6,10 @@ import (
 	"encoding/json"
 )
 
+type JsonResp struct {
+	data interface{}
+}
+
 func Json(respwrite http.ResponseWriter, statuscode int, data interface{}){
 	respwrite.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	respwrite.WriteHeader(statuscode)
@@ -17,4 +21,8 @@ func Json(respwrite http.ResponseWriter, statuscode int, data interface{}){
 	}
 
 	respwrite.Write(body)
+}
+
+func (j *JsonResp) PrettyPrint() ([]byte, error) {
+	return json.MarshalIndent(&j.data, "", "  ")
 }
