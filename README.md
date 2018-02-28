@@ -25,6 +25,10 @@ config
 =
 * get config from file
 
+CLI Installation
+=
+$ go get github.com/Jason916/peanut_core/log
+
 Getting Started
 =
 ```go
