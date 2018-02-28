@@ -11,7 +11,7 @@ func NewHandler(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				log.Error("Error: %+v\n %s", err, debug.Stack())
+				log.Error("Error: ", err, debug.Stack())
 			}
 		}()
 		logrespwriter := &LogRespWriter{responseWriter: resp}
@@ -19,3 +19,4 @@ func NewHandler(handler http.Handler) http.Handler {
 		log.Info("%v %v %v (%v)", logrespwriter.Status(), req.Method, req.URL.Path, req.RemoteAddr)
 	})
 }
+
