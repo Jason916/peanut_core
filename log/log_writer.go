@@ -149,10 +149,12 @@ func (w *WriterFile) writeFile() error {
 		return nil
 	}
 	file, err := os.OpenFile(w.logCurFileUrl, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if file != nil {
+		defer file.Close()
+	}
 	if err != nil {
 		return err
 	}
-	defer file.Close()
 
 	for len(w.logChan) > 0 {
 		select {
